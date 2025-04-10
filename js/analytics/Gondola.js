@@ -9,7 +9,7 @@ let visitID = "";//30 mint de inactividad, 12 horas actividad continua o 2500 hi
 let visitorID = ""; //dos años o 13 meses sin actividad //antiguo mcid (en principio cogemos el de adobe y desarrollamos algoritmo para crearlo nosotros)
 //https://experienceleague.adobe.com/en/docs/analytics/components/metrics/visits 
 let sessionID = "";//(30 minutos de inactividad, 12 horas de actividad continua o 2500 hits).
-let bots = "";// (100 hits en menos de 100 segundos) -> En este caso, la visita finaliza cuando se cumple esto.
+let bots = "";// (100 hits en menos de 100 segundos) -> En este caso, la visita finaliza cuando se cumple esto. // CRIS --> BACK
 let timeSession = "";//lo procesa ADA
 let timeVisit = "";//lo procesa ADA
 let pageLoadTime = "";// ok temporizador carga de la página en milisegundos
@@ -22,7 +22,7 @@ let totalVisibleArea = "";//ok
 let PercentPageViewed = "";//ok
 let scrollTop = "";//ok
 let scrollComplete = "";//ok
-let error404 = "";//????
+let error404 = "";//???? CRIS --> BACK
 let ip = "";//puedo extraer, pero requiere usar un servicio de terceros
 let geolocation = "";//puedo extraer, pero requiere usar un servicio de terceros y autorización del usuario
 let conectionTipe = "";
@@ -87,7 +87,10 @@ console.log('Hemos terminado de procesar los plugins');
 //función de lanzamiento de huella
 window.MiDigitalView = function(action, object) {
     console.log("SCRIPT ANALÍTICA: Lanzamiento de huella");
-    if(window.eventFired){
+    console.log("🔵 Datos recibidos por MiDigitalView:");
+    console.log("action:", action);
+    console.log("digitalData:", JSON.stringify(object, null, 2));
+        if(window.eventFired){
         //no permitir lanzar inicio de funnel
     }else{
         //permitir lanzar inicio de funnel
@@ -279,10 +282,12 @@ window.MiDigitalView = function(action, object) {
     viewEvents = "";
 }
     
-//función de lanzamiento de clik
+//función de lanzamiento de clic
 window.MiDigitalLink = function(action, object) {
     console.log("SCRIPT ANALÍTICA: Lanzamiento de clic");
-
+    console.log("🔵 Datos recibidos por MiDigitalLink:");
+    console.log("action:", action);
+    console.log("digitalData:", JSON.stringify(object, null, 2));
     switch (action) {
         case 'External Link':
             clikEvents += ",event6";
