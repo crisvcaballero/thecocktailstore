@@ -19,6 +19,63 @@
   <script src="js/analytics/Helpers.js" type="text/javascript"></script>
   <script src="js/analytics/CookieManager.js" type="text/javascript"></script>
   <script src="js/analytics/Gondola.js" type="text/javascript"></script>
+<! -- ACTIVACION ANALYTICS -->
+<script>
+  // Función para detectar si hay UTM en la URL
+  function hasUTMParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.has("utm_source") || urlParams.has("utm_medium") || urlParams.has("utm_campaign");
+  }
+  
+  // Función principal de activación
+  function activarEventosAnalitica() {
+    try {
+      // 1. Vista de página normal
+      huella();
+  
+      // 2. Página con error 404
+      if (
+        typeof digitalData !== "undefined" &&
+        digitalData.page &&
+        digitalData.page.pageInfo &&
+        digitalData.page.pageInfo.errorPage === "404"
+      ) {
+        huellaConErrorPage();
+      }
+  
+      // 3. Página con UTM
+      if (hasUTMParams()) {
+        huellaConInternalCampaign();
+      }
+  
+      // 4. Trackeo de clics en botones
+      const buttons = document.querySelectorAll(
+        "button.nav__toggle, button.filter__button, button.filter__button.active, button.button.product__button, button.cart-modal__close"
+      );
+  
+      buttons.forEach((btn) => {
+        // Si es botón de producto
+        if (btn.classList.contains("product__button")) {
+          btn.addEventListener("click", () => {
+            console.log("🟢 Click en botón de producto → ejecutando appOnClickStart()");
+            appOnClickStart();
+          });
+        } else {
+          // Otro botón, solo trazamos en consola
+          btn.addEventListener("click", () => {
+            console.log("🔵 Click en otro botón: ", btn.className);
+          });
+        }
+      });
+    } catch (err) {
+      console.error("❌ Error en activarEventosAnalitica:", err);
+    }
+  }
+  
+  // Ejecutar todo al cargar la página
+  document.addEventListener("DOMContentLoaded", activarEventosAnalitica);
+</script>
+
   </head>
   <body>
     <header class="header">
