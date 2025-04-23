@@ -81,7 +81,27 @@ console.log('Hemos terminado de procesar los plugins');
  * End Plugins 1.0
  */
 
-
+//Funcion dummy CRIS serialización
+function serialize(value) {
+    try {
+      if (typeof value === 'object') {
+        return JSON.stringify(value);
+      }
+      return String(value);
+    } catch (e) {
+      return '';
+    }
+  }
+//Inicialización _satellite para pruebas CRIS
+  window._satellite = window._satellite || {
+    getVar: function (key) {
+      const varsSimuladas = {
+        'CC.digitalData.application.application.type:digitalData.application.application.name': 'simulado-app-type:nombre-app',
+        'otra.clave.especifica': 'valor-prueba'
+      };
+      return varsSimuladas[key] || '[valor_no_definido]';
+    }
+  };
 
 
 //función de lanzamiento de huella

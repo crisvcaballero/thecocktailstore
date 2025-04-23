@@ -283,18 +283,18 @@ class Helpers {
         while (match = regex.exec(queryString)) {
             params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
         }
-		params.forEach((v, i) => {
-			if(params[i]== 'cid'){
-				let value = params[i].split(':');
-				value.forEach((v, i) => {
-					console.log(`Índice: ${i}, Valor: ${v}`);
-				});
-
-			}else if(params[i]== 'app'){
-
+		Object.entries(params).forEach(([key, value], i) => {
+			if (key === 'cid') {
+			  let parts = value.split(':');
+			  parts.forEach((v, i) => {
+				console.log(`Índice: ${i}, Valor: ${v}`);
+			  });
+			} else if (key === 'app') {
+			  // lógica para app
 			}
-			console.log(`Índice: ${i}, Valor: ${v}`);
-		});
+		  
+			console.log(`Índice: ${i}, Valor: ${value}`);
+		  });
         return params;
 	}
 
