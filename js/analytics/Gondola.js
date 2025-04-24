@@ -102,7 +102,74 @@ function serialize(value) {
       return varsSimuladas[key] || '[valor_no_definido]';
     }
   };
-
+// DETECTOR DE BOTS - CRIS
+(function () {
+    var hitTimestamps = [];
+    var BOT_HIT_THRESHOLD = 100; // numero de interacciones limite
+    var TIME_WINDOW_MS = 100; // ventana de interacciones en ms
+    var IS_BOT = false;
+    var botEventSent = false;
+  
+    // Guardamos las versiones originales de los objetos, los vamos a interceptar
+    const originalView = window.MiDigitalView;
+    const originalLink = window.MiDigitalLink;
+  
+    function detectBot(fn, action, object) {
+      var now = Date.now();
+  
+      // Mantenemos solo los hits recientes dentro de la ventana
+      hitTimestamps = hitTimestamps.filter(function (ts) {
+        return now - ts <= TIME_WINDOW_MS;
+      });
+  
+      hitTimestamps.push(now);
+  // si se cumplen los límites que habíamos puesto
+      if (hitTimestamps.length >= BOT_HIT_THRESHOLD && !IS_BOT) {
+        IS_BOT = true;
+        console.warn('[BOT DETECTADO] Se ha superado el umbral de hits en tiempo limitado.');
+  
+        if (!botEventSent) {
+          botEventSent = true;
+  
+          // Aquí disparamos "is_bot": se puede usar MiDigitalView o lanzar un beacon separado
+          try {
+            originalView("is_bot", {
+              page: {
+                pageInfo: {
+                  pageName: "bot_detection"
+                }
+              },
+              user: {
+                userAgent: navigator.userAgent
+              },
+              timestamp: now
+            });
+          } catch (e) {
+            console.error('No se pudo lanzar el evento is_bot:', e);
+          }
+        }
+      }
+  
+      // Solo permitimos la llamada si no es bot
+      if (!IS_BOT) {
+        return fn(action, object);
+      } else {
+        console.log(`[BOT DETECTADO] Bloqueado: ${action}`);
+        return false;
+      }
+    }
+  
+    // Reemplazamos las funciones por versiones protegidas
+    window.MiDigitalView = function (action, object) {
+      return detectBot(originalView, action, object);
+    };
+  
+    window.MiDigitalLink = function (action, object) {
+      return detectBot(originalLink, action, object);
+    };
+  
+    console.log('[Bot Detector] Activo sobre MiDigitalView y MiDigitalLink');
+  })();
 
 //función de lanzamiento de huella
 window.MiDigitalView = function(action, object) {
