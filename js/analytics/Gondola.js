@@ -104,73 +104,117 @@ function serialize(value) {
   };
 // DETECTOR DE BOTS - CRIS
 (function () {
+    // Array donde se almacenan los timestamps de los hits para evaluar la velocidad
     var hitTimestamps = [];
-    var BOT_HIT_THRESHOLD = 100; // numero de interacciones limite
-    var TIME_WINDOW_MS = 100; // ventana de interacciones en ms
+  
+    // Configuración: umbral de hits y ventana de tiempo (100ms)
+    var BOT_HIT_THRESHOLD = 100;
+    var TIME_WINDOW_MS = 100;
+  
+    // Flag para marcar si ya se detectó al bot
     var IS_BOT = false;
+  
+    // Flag para asegurarse de que solo se envíe un evento "is_bot"
     var botEventSent = false;
   
-    // Guardamos las versiones originales de los objetos, los vamos a interceptar
+    // Contador total de hits
+    var hitCounter = 0;
+  
+    // Objeto auxiliar para guardar datos del bot para enviar con "is_bot"
+    var botMeta = {
+      totalHits: 0,
+      firstHitTime: null,
+      lastHitTime: null,
+      samplePageNames: []
+    };
+  
+    // Guardamos las funciones originales para poder usarlas si el tráfico es legítimo
     const originalView = window.MiDigitalView;
     const originalLink = window.MiDigitalLink;
   
+    /**
+     * Función que envuelve a MiDigitalView o MiDigitalLink
+     * Evalúa si se trata de tráfico bot y actúa en consecuencia
+     */
     function detectBot(fn, action, object) {
-      var now = Date.now();
-  
-      // Mantenemos solo los hits recientes dentro de la ventana
-      hitTimestamps = hitTimestamps.filter(function (ts) {
-        return now - ts <= TIME_WINDOW_MS;
-      });
-  
-      hitTimestamps.push(now);
-  // si se cumplen los límites que habíamos puesto
-      if (hitTimestamps.length >= BOT_HIT_THRESHOLD && !IS_BOT) {
-        IS_BOT = true;
-        console.warn('[BOT DETECTADO] Se ha superado el umbral de hits en tiempo limitado.');
-  
-        if (!botEventSent) {
-          botEventSent = true;
-  
-          // Aquí disparamos "is_bot": se puede usar MiDigitalView o lanzar un beacon separado
-          try {
-            originalView("is_bot", {
-              page: {
-                pageInfo: {
-                  pageName: "bot_detection"
-                }
-              },
-              user: {
-                userAgent: navigator.userAgent
-              },
-              timestamp: now
-            });
-          } catch (e) {
-            console.error('No se pudo lanzar el evento is_bot:', e);
-          }
-        }
-      }
-  
-      // Solo permitimos la llamada si no es bot
-      if (!IS_BOT) {
-        return fn(action, object);
-      } else {
+      //  Protección inmediata: si ya se detectó el bot, no dejamos pasar más hits
+      if (IS_BOT) {
         console.log(`[BOT DETECTADO] Bloqueado: ${action}`);
         return false;
       }
+  
+      var now = Date.now(); // Marca de tiempo actual
+      hitCounter++; // Incrementamos el contador total
+  
+      // Guardamos el tiempo del primer hit (para trazabilidad)
+      if (hitCounter === 1) {
+        botMeta.firstHitTime = now;
+      }
+  
+      // Guardamos el tiempo del último hit y total acumulado
+      botMeta.lastHitTime = now;
+      botMeta.totalHits = hitCounter;
+  
+      // Guardamos algunos pageNames de muestra para análisis posterior
+      if (object?.page?.pageInfo?.pageName && botMeta.samplePageNames.length < 5) {
+        botMeta.samplePageNames.push(object.page.pageInfo.pageName);
+      }
+  
+      // Limpiamos timestamps que estén fuera de la ventana de tiempo
+      hitTimestamps = hitTimestamps.filter(ts => now - ts <= TIME_WINDOW_MS);
+  
+      // Añadimos el timestamp actual
+      hitTimestamps.push(now);
+  
+      //  Evaluación: si se superó el umbral de hits en el tiempo establecido
+      if (hitTimestamps.length >= BOT_HIT_THRESHOLD) {
+        IS_BOT = true;
+        console.warn('[BOT DETECTADO] Se ha superado el umbral de hits');
+  
+        // Solo lanzamos el evento is_bot una vez
+        if (!botEventSent) {
+          botEventSent = true;
+  
+          try {
+            // Llamamos a la función original MiDigitalView para enviar el evento "is_bot"
+            originalView("is_bot", {
+              page: {
+                pageInfo: {
+                  pageName: "bot:detection"
+                }
+              },
+              botMeta: botMeta, // Información de la ráfaga del bot
+              timestamp: now,
+              userAgent: navigator.userAgent,
+              source: 'bot_protection_script'
+            });
+          } catch (e) {
+            console.error('Error enviando is_bot:', e);
+          }
+        }
+  
+        //  Muy importante: detenemos el hit actual
+        return false;
+      }
+  
+      // Si no se ha detectado como bot, ejecutamos la función original
+      return fn(action, object);
     }
   
-    // Reemplazamos las funciones por versiones protegidas
+    // Reemplazamos MiDigitalView con la versión protegida
     window.MiDigitalView = function (action, object) {
       return detectBot(originalView, action, object);
     };
   
+    // Reemplazamos MiDigitalLink con la versión protegida
     window.MiDigitalLink = function (action, object) {
       return detectBot(originalLink, action, object);
     };
   
-    console.log('[Bot Detector] Activo sobre MiDigitalView y MiDigitalLink');
+    // Mensaje de activación del sistema en consola
+    console.log('[Bot Detector] Protegiendo MiDigitalView y MiDigitalLink');
   })();
-
+  
 //función de lanzamiento de huella
 window.MiDigitalView = function(action, object) {
     console.log("SCRIPT ANALÍTICA: Lanzamiento de huella");
