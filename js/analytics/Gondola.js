@@ -429,98 +429,6 @@ window.MiDigitalLink = function(action, object) {
 
 }
 
-// DETECTOR DE BOTS - CRIS
-(function waitForMiDigitalFunctions() {
-    if (typeof window.MiDigitalView !== 'function' || typeof window.MiDigitalLink !== 'function') {
-      // Esperamos hasta que ambas funciones estén definidas
-      setTimeout(waitForMiDigitalFunctions, 10);
-      return;
-    }
-  
-    // ⬇️ BLOQUE PRINCIPAL DEL DETECTOR DE BOTS
-    (function () {
-      var hitTimestamps = [];
-      var BOT_HIT_THRESHOLD = 100;
-      var TIME_WINDOW_MS = 100;
-      var IS_BOT = false;
-      var botEventSent = false;
-      var hitCounter = 0;
-  
-      var botMeta = {
-        totalHits: 0,
-        firstHitTime: null,
-        lastHitTime: null,
-        samplePageNames: []
-      };
-  
-      const originalView = window.MiDigitalView;
-      const originalLink = window.MiDigitalLink;
-  
-      function detectBot(fn, action, object) {
-        if (IS_BOT) {
-          console.log(`[BOT DETECTADO] Bloqueado: ${action}`);
-          return false;
-        }
-  
-        var now = Date.now();
-        hitCounter++;
-  
-        if (hitCounter === 1) {
-          botMeta.firstHitTime = now;
-        }
-  
-        botMeta.lastHitTime = now;
-        botMeta.totalHits = hitCounter;
-  
-        if (object?.page?.pageInfo?.pageName && botMeta.samplePageNames.length < 5) {
-          botMeta.samplePageNames.push(object.page.pageInfo.pageName);
-        }
-  
-        hitTimestamps = hitTimestamps.filter(ts => now - ts <= TIME_WINDOW_MS);
-        hitTimestamps.push(now);
-  
-        if (hitTimestamps.length >= BOT_HIT_THRESHOLD) {
-          IS_BOT = true;
-          console.warn('[BOT DETECTADO] Se ha superado el umbral de hits');
-  
-          if (!botEventSent) {
-            botEventSent = true;
-  
-            try {
-              originalView("is_bot", {
-                page: {
-                  pageInfo: {
-                    pageName: "bot:detection"
-                  }
-                },
-                botMeta: botMeta,
-                timestamp: now,
-                userAgent: navigator.userAgent,
-                source: 'bot_protection_script'
-              });
-            } catch (e) {
-              console.error('Error enviando is_bot:', e);
-            }
-          }
-  
-          return false;
-        }
-  
-        return fn(action, object);
-      }
-  
-      window.MiDigitalView = function (action, object) {
-        return detectBot(originalView, action, object);
-      };
-  
-      window.MiDigitalLink = function (action, object) {
-        return detectBot(originalLink, action, object);
-      };
-  
-      console.log('[Bot Detector] Protegiendo MiDigitalView y MiDigitalLink');
-    })();
-  })();
-//FIN DE SCRIPT BOT  
 
 function huella() {
    // alert('Se ha dado clic al botón!');
@@ -699,5 +607,97 @@ function datalayer() {
 }
 
 
+// DETECTOR DE BOTS - CRIS
+(function waitForMiDigitalFunctions() {
+    if (typeof window.MiDigitalView !== 'function' || typeof window.MiDigitalLink !== 'function') {
+      // Esperamos hasta que ambas funciones estén definidas
+      setTimeout(waitForMiDigitalFunctions, 10);
+      return;
+    }
+  
+    // ⬇️ BLOQUE PRINCIPAL DEL DETECTOR DE BOTS
+    (function () {
+      var hitTimestamps = [];
+      var BOT_HIT_THRESHOLD = 100;
+      var TIME_WINDOW_MS = 100;
+      var IS_BOT = false;
+      var botEventSent = false;
+      var hitCounter = 0;
+  
+      var botMeta = {
+        totalHits: 0,
+        firstHitTime: null,
+        lastHitTime: null,
+        samplePageNames: []
+      };
+  
+      const originalView = window.MiDigitalView;
+      const originalLink = window.MiDigitalLink;
+  
+      function detectBot(fn, action, object) {
+        if (IS_BOT) {
+          console.log(`[BOT DETECTADO] Bloqueado: ${action}`);
+          return false;
+        }
+  
+        var now = Date.now();
+        hitCounter++;
+  
+        if (hitCounter === 1) {
+          botMeta.firstHitTime = now;
+        }
+  
+        botMeta.lastHitTime = now;
+        botMeta.totalHits = hitCounter;
+  
+        if (object?.page?.pageInfo?.pageName && botMeta.samplePageNames.length < 5) {
+          botMeta.samplePageNames.push(object.page.pageInfo.pageName);
+        }
+  
+        hitTimestamps = hitTimestamps.filter(ts => now - ts <= TIME_WINDOW_MS);
+        hitTimestamps.push(now);
+  
+        if (hitTimestamps.length >= BOT_HIT_THRESHOLD) {
+          IS_BOT = true;
+          console.warn('[BOT DETECTADO] Se ha superado el umbral de hits');
+  
+          if (!botEventSent) {
+            botEventSent = true;
+  
+            try {
+              originalView("is_bot", {
+                page: {
+                  pageInfo: {
+                    pageName: "bot:detection"
+                  }
+                },
+                botMeta: botMeta,
+                timestamp: now,
+                userAgent: navigator.userAgent,
+                source: 'bot_protection_script'
+              });
+            } catch (e) {
+              console.error('Error enviando is_bot:', e);
+            }
+          }
+  
+          return false;
+        }
+  
+        return fn(action, object);
+      }
+  
+      window.MiDigitalView = function (action, object) {
+        return detectBot(originalView, action, object);
+      };
+  
+      window.MiDigitalLink = function (action, object) {
+        return detectBot(originalLink, action, object);
+      };
+  
+      console.log('[Bot Detector] Protegiendo MiDigitalView y MiDigitalLink');
+    })();
+  })();
+//FIN DE SCRIPT BOT  
 
 
