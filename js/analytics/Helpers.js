@@ -487,3 +487,89 @@ class Helpers {
 	}
 
 }
+// CRIS - control sesiones por tiempo de inactividad
+(function(){
+	const TIMEOUT_MINUTES = 1; // Cambia este valor para el tiempo de expiración
+  
+	class InactivityCookie {
+	  static generateId() {
+		return 'id-' + Math.random().toString(36).substr(2, 9);
+	  }
+  
+	  static set(name, value, timeoutMinutes = TIMEOUT_MINUTES) {
+		const now = Date.now();
+		const data = JSON.stringify({ value, timestamp: now });
+		const expires = new Date(now + timeoutMinutes * 60 * 1000).toUTCString();
+		const encoded = encodeURIComponent(data);
+		document.cookie = `${name}=${encoded}; expires=${expires}; path=/`;
+  
+		console.log(`[Cookie ${name} SET] Raw: ${encoded}`);
+		console.log(`[Cookie ${name} SET] Decoded:`, { value, timestamp: now, expires });
+	  }
+  
+	  static get(name) {
+		const cookie = document.cookie
+		  .split("; ")
+		  .find(c => c.startsWith(name + "="));
+		if (!cookie) return null;
+  
+		try {
+		  return JSON.parse(decodeURIComponent(cookie.split("=")[1]));
+		} catch {
+		  return null;
+		}
+	  }
+  
+	  static isExpired(timestamp, timeoutMinutes = TIMEOUT_MINUTES) {
+		const now = Date.now();
+		return (now - timestamp) > timeoutMinutes * 60 * 1000;
+	  }
+  
+	  static checkAndUpdate(name, timeoutMinutes = TIMEOUT_MINUTES) {
+		const data = this.get(name);
+		if (!data || this.isExpired(data.timestamp, timeoutMinutes)) {
+		  const newId = this.generateId();
+		  this.set(name, newId, timeoutMinutes);
+		  console.log(`[Cookie ${name}] Nueva sesión iniciada (expirada o inexistente)\n`);
+		  return newId;
+		} else {
+		  this.set(name, data.value, timeoutMinutes);
+		  console.log(`[Cookie ${name}] Sesión renovada (interacción detectada)\n`);
+		  return data.value;
+		}
+	  }
+  
+	  static delete(name) {
+		document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+		console.log(`[Cookie ${name}] Eliminada manualmente`);
+	  }
+  
+	  static bindActivityEvents(name, timeoutMinutes = TIMEOUT_MINUTES) {
+		this.checkAndUpdate(name, timeoutMinutes);
+  
+		const handler = () => this.checkAndUpdate(name, timeoutMinutes);
+  
+		const events = [
+		  "click", "scroll", "keydown", "mousemove",
+		  "touchstart", "resize", "input", "change"
+		];
+  
+		events.forEach(event =>
+		  window.addEventListener(event, handler, { passive: true })
+		);
+  
+		document.addEventListener("visibilitychange", () => {
+		  if (!document.hidden) handler();
+		});
+	  }
+	}
+  
+	// Activar lógica con TIMEOUT_MINUTES
+	InactivityCookie.bindActivityEvents("sessionUser");
+  
+	// Verifica estado cada 5s
+	setInterval(() => {
+	  InactivityCookie.checkAndUpdate("sessionUser");
+	}, 5000);
+  })();
+  
