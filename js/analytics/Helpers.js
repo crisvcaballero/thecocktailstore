@@ -489,7 +489,7 @@ class Helpers {
 }
 // CRIS - control sesiones por tiempo de inactividad
 (function(){
-	const TIMEOUT_MINUTES = 1; // Cambia este valor para el tiempo de expiración
+	const TIMEOUT_MINUTES = 1; // ⏱ Cambia aquí la duración
   
 	class InactivityCookie {
 	  static generateId() {
@@ -533,9 +533,16 @@ class Helpers {
 		  console.log(`[Cookie ${name}] Nueva sesión iniciada (expirada o inexistente)\n`);
 		  return newId;
 		} else {
-		  this.set(name, data.value, timeoutMinutes);
-		  console.log(`[Cookie ${name}] Sesión renovada (interacción detectada)\n`);
+		  // No renovar si no hay interacción (esto lo hace bindActivityEvents)
 		  return data.value;
+		}
+	  }
+  
+	  static refreshOnInteraction(name, timeoutMinutes = TIMEOUT_MINUTES) {
+		const data = this.get(name);
+		if (data && !this.isExpired(data.timestamp, timeoutMinutes)) {
+		  this.set(name, data.value, timeoutMinutes);
+		  console.log(`[Cookie ${name}] Sesión renovada por interacción\n`);
 		}
 	  }
   
@@ -545,9 +552,9 @@ class Helpers {
 	  }
   
 	  static bindActivityEvents(name, timeoutMinutes = TIMEOUT_MINUTES) {
-		this.checkAndUpdate(name, timeoutMinutes);
+		this.checkAndUpdate(name, timeoutMinutes); // Solo una vez al cargar
   
-		const handler = () => this.checkAndUpdate(name, timeoutMinutes);
+		const handler = () => this.refreshOnInteraction(name, timeoutMinutes);
   
 		const events = [
 		  "click", "scroll", "keydown",
@@ -564,12 +571,7 @@ class Helpers {
 	  }
 	}
   
-	// Activar lógica con TIMEOUT_MINUTES
+	// Inicia seguimiento
 	InactivityCookie.bindActivityEvents("sessionUser");
-  
-	// Verifica estado cada 5s
-	setInterval(() => {
-	  InactivityCookie.checkAndUpdate("sessionUser");
-	}, 5000);
   })();
   
