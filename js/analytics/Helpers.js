@@ -550,7 +550,7 @@ class Helpers {
 		const handler = () => this.checkAndUpdate(name, timeoutMinutes);
   
 		const events = [
-		  "click", "scroll", "keydown", "mousemove",
+		  "click", "scroll", "keydown",
 		  "touchstart", "resize", "input", "change"
 		];
   
