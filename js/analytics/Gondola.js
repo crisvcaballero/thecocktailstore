@@ -310,57 +310,59 @@ window.MiDigitalView = function(action, object) {
 };
 
 if (miTrackObject.type !== "stop") {
-  // 1) Aplana digitalData
-  var flatDD = flatten(miTrackObject.digitalData);
+  // ——— 1) Filtrar según toggle y formatear cada rama ———
+  var filteredDD = pruneAndFormat(
+    miTrackObject.digitalData,
+    dataLayerToggle,
+    toggleFormatters
+  );
 
-  // 2) Construye aux
+  // ——— 2) Aplana el resultado filtrado ———
+  var flatDD = flatten(filteredDD);
+
+  // ——— 3) Construye el payload final (aux) ———
   var aux = {
     action: miTrackObject.action,
     type:   miTrackObject.type,
     events: miTrackObject.events,
 
-    // Inserta todas las claves planas de digitalData
+    // Inserta sólo las claves planas de las ramas activas
     ...flatDD,
 
-    uniqueID:          visitorID,
-    timeParting:       Helpers.getTimeParting(),
-    returningVisitor:  Helpers.getNewRepeat(),
-    trackingCode:      Helpers.getTrackingCode(),
-    loadTime:          Helpers.getLoadTime(),
-    navigatorName:     Helpers.getBrowserName(),
-    navigatorVersion:  Helpers.getBrowserVersion(),
-    navigatorPlatform: Helpers.getBrowserPlatform(),
-    navigatorUserAgent:Helpers.getBrowserUserAgent(),
-    navigatorLanguage: Helpers.getBrowserLanguage(),
-    referringDomain:   Helpers.getReferringDomain(),
-    url:               window.location.href
+    // Resto de datos que quieres enviar siempre
+    uniqueID:           visitorID,
+    timeParting:        Helpers.getTimeParting(),
+    returningVisitor:   Helpers.getNewRepeat(),
+    trackingCode:       Helpers.getTrackingCode(),
+    loadTime:           Helpers.getLoadTime(),
+    navigatorName:      Helpers.getBrowserName(),
+    navigatorVersion:   Helpers.getBrowserVersion(),
+    navigatorPlatform:  Helpers.getBrowserPlatform(),
+    navigatorUserAgent: Helpers.getBrowserUserAgent(),
+    navigatorLanguage:  Helpers.getBrowserLanguage(),
+    referringDomain:    Helpers.getReferringDomain(),
+    url:                window.location.href
   };
 
-  // 3) Log en consola
+  // ——— 4) Log y envío ———
   console.log(
     miTrackObject.action + " -> \nEnviando evento: ",
     aux
   );
 
-  // 4) Envío a Google Sheets
   fetch(SHEET_API_URL, {
     method:  'POST',
-    mode:    'no-cors',            // evita error CORS
+    mode:    'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body:    JSON.stringify(aux)
   })
-  .then(() => {
-    // opcional: confirmar en consola
-    console.log('Envío a Sheets OK');
-  })
-  .catch(err => {
-    console.warn('Error al enviar a Sheets:', err);
-  });
+  .then(() => console.log('Envío a Sheets OK'))
+  .catch(err => console.warn('Error al enviar a Sheets:', err));
 }
 
 clikEvents = "";
 miTrackObject = {};
-
+  
 }
     
 //función de lanzamiento de clic
@@ -497,56 +499,59 @@ window.MiDigitalLink = function(action, object) {
 };
 
 if (miTrackObject.type !== "stop") {
-  // 1) Aplana digitalData
-  var flatDD = flatten(miTrackObject.digitalData);
+  // ——— 1) Filtrar según toggle y formatear cada rama ———
+  var filteredDD = pruneAndFormat(
+    miTrackObject.digitalData,
+    dataLayerToggle,
+    toggleFormatters
+  );
 
-  // 2) Construye aux
+  // ——— 2) Aplana el resultado filtrado ———
+  var flatDD = flatten(filteredDD);
+
+  // ——— 3) Construye el payload final (aux) ———
   var aux = {
     action: miTrackObject.action,
     type:   miTrackObject.type,
     events: miTrackObject.events,
 
-    // Inserta todas las claves planas de digitalData
+    // Inserta sólo las claves planas de las ramas activas
     ...flatDD,
 
-    uniqueID:          visitorID,
-    timeParting:       Helpers.getTimeParting(),
-    returningVisitor:  Helpers.getNewRepeat(),
-    trackingCode:      Helpers.getTrackingCode(),
-    loadTime:          Helpers.getLoadTime(),
-    navigatorName:     Helpers.getBrowserName(),
-    navigatorVersion:  Helpers.getBrowserVersion(),
-    navigatorPlatform: Helpers.getBrowserPlatform(),
-    navigatorUserAgent:Helpers.getBrowserUserAgent(),
-    navigatorLanguage: Helpers.getBrowserLanguage(),
-    referringDomain:   Helpers.getReferringDomain(),
-    url:               window.location.href
+    // Resto de datos que quieres enviar siempre
+    uniqueID:           visitorID,
+    timeParting:        Helpers.getTimeParting(),
+    returningVisitor:   Helpers.getNewRepeat(),
+    trackingCode:       Helpers.getTrackingCode(),
+    loadTime:           Helpers.getLoadTime(),
+    navigatorName:      Helpers.getBrowserName(),
+    navigatorVersion:   Helpers.getBrowserVersion(),
+    navigatorPlatform:  Helpers.getBrowserPlatform(),
+    navigatorUserAgent: Helpers.getBrowserUserAgent(),
+    navigatorLanguage:  Helpers.getBrowserLanguage(),
+    referringDomain:    Helpers.getReferringDomain(),
+    url:                window.location.href
   };
 
-  // 3) Log en consola
+  // ——— 4) Log y envío ———
   console.log(
     miTrackObject.action + " -> \nEnviando evento: ",
     aux
   );
 
-  // 4) Envío a Google Sheets
   fetch(SHEET_API_URL, {
     method:  'POST',
-    mode:    'no-cors',            // evita error CORS
+    mode:    'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body:    JSON.stringify(aux)
   })
-  .then(() => {
-    // opcional: confirmar en consola
-    console.log('Envío a Sheets OK');
-  })
-  .catch(err => {
-    console.warn('Error al enviar a Sheets:', err);
-  });
+  .then(() => console.log('Envío a Sheets OK'))
+  .catch(err => console.warn('Error al enviar a Sheets:', err));
 }
 
 clikEvents = "";
 miTrackObject = {};
+
 //fin de función envio CRIS
 
 }
