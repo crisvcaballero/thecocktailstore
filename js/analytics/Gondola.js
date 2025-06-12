@@ -106,10 +106,10 @@ function serialize(value) {
   
 //función de lanzamiento de huella
 window.MiDigitalView = function(action, object) {
-    console.log("SCRIPT ANALÍTICA: Lanzamiento de huella");
-    console.log("🔵 Datos recibidos por MiDigitalView:");
-    console.log("action:", action);
-    console.log("digitalData:", JSON.stringify(object, null, 2));
+  //  console.log("SCRIPT ANALÍTICA: Lanzamiento de huella");
+  //  console.log("🔵 Datos recibidos por MiDigitalView:");
+  //  console.log("action:", action);
+  //  console.log("digitalData:", JSON.stringify(object, null, 2));
         if(window.eventFired){
         //no permitir lanzar inicio de funnel
     }else{
@@ -271,8 +271,8 @@ window.MiDigitalView = function(action, object) {
       }
     }
 
-
-    var miTrackObject = {"action":action, "type":"sendView", "events":viewEvents, "digitalData":object};
+//envio de Circe
+  /*  var miTrackObject = {"action":action, "type":"sendView", "events":viewEvents, "digitalData":object};
     // contrucción de llamada a AWS
     if (miTrackObject.type != "stop"){
         var aux = {
@@ -299,7 +299,68 @@ window.MiDigitalView = function(action, object) {
        
     }
     miTrackObject = {};
-    viewEvents = "";
+    viewEvents = ""; */
+
+    //Función envio de CRIS
+    var miTrackObject = {
+  action: action,
+  type:   "sendLink",
+  events: clikEvents,
+  digitalData: object
+};
+
+if (miTrackObject.type !== "stop") {
+  // 1) Aplana digitalData
+  var flatDD = flatten(miTrackObject.digitalData);
+
+  // 2) Construye aux
+  var aux = {
+    action: miTrackObject.action,
+    type:   miTrackObject.type,
+    events: miTrackObject.events,
+
+    // Inserta todas las claves planas de digitalData
+    ...flatDD,
+
+    uniqueID:          visitorID,
+    timeParting:       Helpers.getTimeParting(),
+    returningVisitor:  Helpers.getNewRepeat(),
+    trackingCode:      Helpers.getTrackingCode(),
+    loadTime:          Helpers.getLoadTime(),
+    navigatorName:     Helpers.getBrowserName(),
+    navigatorVersion:  Helpers.getBrowserVersion(),
+    navigatorPlatform: Helpers.getBrowserPlatform(),
+    navigatorUserAgent:Helpers.getBrowserUserAgent(),
+    navigatorLanguage: Helpers.getBrowserLanguage(),
+    referringDomain:   Helpers.getReferringDomain(),
+    url:               window.location.href
+  };
+
+  // 3) Log en consola
+  console.log(
+    miTrackObject.action + " -> \nEnviando evento: ",
+    aux
+  );
+
+  // 4) Envío a Google Sheets
+  fetch(SHEET_API_URL, {
+    method:  'POST',
+    mode:    'no-cors',            // evita error CORS
+    headers: { 'Content-Type': 'text/plain' },
+    body:    JSON.stringify(aux)
+  })
+  .then(() => {
+    // opcional: confirmar en consola
+    console.log('Envío a Sheets OK');
+  })
+  .catch(err => {
+    console.warn('Error al enviar a Sheets:', err);
+  });
+}
+
+clikEvents = "";
+miTrackObject = {};
+
 }
     
 //función de lanzamiento de clic
@@ -399,8 +460,8 @@ window.MiDigitalLink = function(action, object) {
         default:
             console.log("Evento de analítica no incluido en la taxonomía");
     }
-
-    var miTrackObject = {"action":action, "type":"sendLink", "events":clikEvents, "digitalData":object};
+//versión envío Circe
+   /* var miTrackObject = {"action":action, "type":"sendLink", "events":clikEvents, "digitalData":object};
     if (miTrackObject.type != "stop"){
         //ejecución de la llamada a AWS
         var aux = {
@@ -425,7 +486,68 @@ window.MiDigitalLink = function(action, object) {
        
     }
     clikEvents = "";
-    miTrackObject = {};
+    miTrackObject = {};*/
+
+    //Función envío Cris
+    var miTrackObject = {
+  action: action,
+  type:   "sendLink",
+  events: clikEvents,
+  digitalData: object
+};
+
+if (miTrackObject.type !== "stop") {
+  // 1) Aplana digitalData
+  var flatDD = flatten(miTrackObject.digitalData);
+
+  // 2) Construye aux
+  var aux = {
+    action: miTrackObject.action,
+    type:   miTrackObject.type,
+    events: miTrackObject.events,
+
+    // Inserta todas las claves planas de digitalData
+    ...flatDD,
+
+    uniqueID:          visitorID,
+    timeParting:       Helpers.getTimeParting(),
+    returningVisitor:  Helpers.getNewRepeat(),
+    trackingCode:      Helpers.getTrackingCode(),
+    loadTime:          Helpers.getLoadTime(),
+    navigatorName:     Helpers.getBrowserName(),
+    navigatorVersion:  Helpers.getBrowserVersion(),
+    navigatorPlatform: Helpers.getBrowserPlatform(),
+    navigatorUserAgent:Helpers.getBrowserUserAgent(),
+    navigatorLanguage: Helpers.getBrowserLanguage(),
+    referringDomain:   Helpers.getReferringDomain(),
+    url:               window.location.href
+  };
+
+  // 3) Log en consola
+  console.log(
+    miTrackObject.action + " -> \nEnviando evento: ",
+    aux
+  );
+
+  // 4) Envío a Google Sheets
+  fetch(SHEET_API_URL, {
+    method:  'POST',
+    mode:    'no-cors',            // evita error CORS
+    headers: { 'Content-Type': 'text/plain' },
+    body:    JSON.stringify(aux)
+  })
+  .then(() => {
+    // opcional: confirmar en consola
+    console.log('Envío a Sheets OK');
+  })
+  .catch(err => {
+    console.warn('Error al enviar a Sheets:', err);
+  });
+}
+
+clikEvents = "";
+miTrackObject = {};
+//fin de función envio CRIS
 
 }
 
