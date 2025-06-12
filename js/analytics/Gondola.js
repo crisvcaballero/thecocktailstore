@@ -226,7 +226,13 @@ window.MiDigitalView = function(action, object) {
             if(digitalData.application.state == 'cancelado'){
                 viewEvents += ",event76,event55" + ':' + serialize(_satellite.getVar('CC.digitalData.application.application.type:digitalData.application.application.name'));
             }
-        break;        
+        break; 
+         case 'is_bot':
+            //isQualifiedVisits
+            if(digitalData.products !== 'undefined' && digitalData.page.pageInfo.pageIntent == 'landing page' && digitalData.page.pageInfo.pageIntent == 'catalogo de producto' && digitalData.application.isQualifiedVisits == 'true'){
+                viewEvents += ",event00," + serialize(digitalData.products.attributes[0].productName);
+            }
+        break;       
         default:
             console.log("Evento de analítica no incluido en la taxonomía");
     }  
