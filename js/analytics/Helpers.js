@@ -578,4 +578,70 @@ class Helpers {
 	// Iniciar la lógica de control de sesión
 	InactivityCookie.bindActivityEvents("sessionUser");
   })();
+//CRIS - ENVIO A BBDD google sheets (REVISAR/BORRAR)
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbytWuVWjfTAEeC3Lg7yrD7eCV5OfnADgs_SctcLgtsnuwsbo1gls6rENXL4EkjKBz-ERQ/exec';
+
+// 1) Configuración: activa/desactiva cada sección
+const dataLayerToggle = {
+    versionDL:          true,
+    pageInstanceID:     true,
+    page:               true,
+    optimization:       true,
+    customerExperience: false,
+    internalCampaign:   false,
+    user:               false,
+    application:        true,
+    products:           true,
+    activationTools:    true,
+    news:               true,
+    formData:           true
+  };
+  
+  // 2) (Opcional) Formateadores por sección
+  const toggleFormatters = {
+  /*  page(data) {
+      // Ejemplo: sólo enviamos el nombre y el canal
+      return {
+        pageName: data.pageInfo.pageName,
+        channel:  data.pageInfo.channel
+      };
+    },*/
+    formData(data) {
+      // Ejemplo: combinamos nombre y apellidos
+      return {
+        fullName: `${data.name} ${data.surname}`,
+        address:  data.address
+      };
+    }
+    // deja el resto sin formateador si no lo necesitas
+  };
+  
+  // 3) Función que recorta y formatea según config
+  function pruneAndFormat(source, config, formatters) {
+    const out = {};
+    for (const toggle in config) {
+      if (!config[toggle] || source[toggle] == null) continue;
+      out[toggle] = typeof formatters[toggle] === 'function'
+        ? formatters[toggle](source[toggle])
+        : source[toggle];
+    }
+    return out;
+  }
+  
+  // 4) Función que aplana objetos y arrays recursivamente
+  function flatten(obj, prefix = '', res = {}) {
+    if (Array.isArray(obj)) {
+      obj.forEach((item, i) => {
+        flatten(item, `${prefix}[${i}]`, res);
+      });
+    } else if (obj !== null && typeof obj === 'object') {
+      for (const [k, v] of Object.entries(obj)) {
+        const path = prefix ? `${prefix}.${k}` : k;
+        flatten(v, path, res);
+      }
+    } else {
+      res[prefix] = obj;
+    }
+    return res;
+  }
   
