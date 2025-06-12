@@ -304,7 +304,7 @@ window.MiDigitalView = function(action, object) {
     //Función envio de CRIS
     var miTrackObject = {
   action: action,
-  type:   "sendLink",
+  type:   "sendView",
   events: clikEvents,
   digitalData: object
 };
